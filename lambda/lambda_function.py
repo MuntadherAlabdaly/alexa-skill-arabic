@@ -10,7 +10,7 @@ import json
 import re
 from html import escape
 
-# Set your OpenAI API key
+# Set your OpenAI API key before deployment.
 
 api_key = "YOUR_API_KEY"
 

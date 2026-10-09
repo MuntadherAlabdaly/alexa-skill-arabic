@@ -1,0 +1,45 @@
+{
+  "manifest": {
+    "publishingInformation": {
+      "locales": {
+        "ar-SA": {
+          "name": "جمال",
+          "summary": "مساعد صوتي يتحدث باللهجة العراقية.",
+          "description": "جمال مساعد صوتي ودود يجيب عن الأسئلة باللهجة العراقية.",
+          "examplePhrases": [
+            "أليكسا افتحي مرحبا جمال"
+          ],
+          "keywords": []
+        },
+        "en-US": {
+          "name": "Jamal",
+          "summary": "A conversational voice assistant.",
+          "description": "Jamal is a friendly conversational voice assistant powered by OpenAI.",
+          "examplePhrases": [
+            "Alexa, open hello Jamal"
+          ],
+          "keywords": []
+        }
+      },
+      "isAvailableWorldwide": true,
+      "testingInstructions": "Open the skill, then ask Jamal a question. Configure the private OpenAI API credential before testing.",
+      "category": "KNOWLEDGE_AND_TRIVIA",
+      "distributionCountries": []
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "sourceDir": "lambda"
+        }
+      }
+    },
+    "manifestVersion": "1.0",
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "usesPersonalInfo": false,
+      "isChildDirected": false,
+      "isExportCompliant": true,
+      "containsAds": false
+    }
+  }
+}

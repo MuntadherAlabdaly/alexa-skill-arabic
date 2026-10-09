@@ -10,7 +10,9 @@ from unittest.mock import Mock
 import unittest
 import requests
 
-ROOT = Path(__file__).parent
+ROOT = Path(__file__).resolve().parents[1]
+LAMBDA_FILE = ROOT / 'lambda' / 'lambda_function.py'
+ARABIC_MODEL = ROOT / 'skill-package' / 'interactionModels' / 'custom' / 'ar-SA.json'
 
 class ResponseBuilder:
     def __init__(self):
@@ -39,7 +41,7 @@ class SkillBuilder:
 
 
 def load_logic():
-    tree = ast.parse((ROOT / 'lambda_function.py').read_text())
+    tree = ast.parse(LAMBDA_FILE.read_text())
     # Use the actual source for all functions/classes; replace only imports/framework.
     tree.body = [n for n in tree.body if not isinstance(n, (ast.Import, ast.ImportFrom))]
     fake_http = SimpleNamespace(post=Mock())
@@ -100,7 +102,7 @@ class JamalLogicTests(unittest.TestCase):
         self.http.post.assert_not_called()
 
     def test_all_model_intents_have_exactly_one_handler(self):
-        model = json.loads((ROOT/'ar-SA.json').read_text())
+        model = json.loads(ARABIC_MODEL.read_text())
         for intent in model['interactionModel']['languageModel']['intents']:
             with self.subTest(intent=intent['name']):
                 h = input_for(intent['name'])
@@ -160,7 +162,7 @@ class JamalLogicTests(unittest.TestCase):
         self.http.post.assert_not_called()
 
     def test_searchquery_has_carrier_phrases(self):
-        model = json.loads((ROOT/'ar-SA.json').read_text())['interactionModel']['languageModel']
+        model = json.loads(ARABIC_MODEL.read_text())['interactionModel']['languageModel']
         intent = next(x for x in model['intents'] if x['name']=='GptQueryIntent')
         self.assertEqual(intent['slots'],[{'name':'query','type':'AMAZON.SearchQuery'}])
         for sample in intent['samples']:

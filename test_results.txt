@@ -1,0 +1,22 @@
+test_all_model_intents_have_exactly_one_handler (__main__.JamalLogicTests.test_all_model_intents_have_exactly_one_handler) ... ok
+test_api_error_is_not_spoken_verbatim (__main__.JamalLogicTests.test_api_error_is_not_spoken_verbatim) ... OpenAI API status=401
+ok
+test_arabic_query_reaches_model_unchanged (__main__.JamalLogicTests.test_arabic_query_reaches_model_unchanged) ... ok
+test_clear_context_preserves_original_scope (__main__.JamalLogicTests.test_clear_context_preserves_original_scope) ... ok
+test_default_followup_function_makes_no_api_call (__main__.JamalLogicTests.test_default_followup_function_makes_no_api_call) ... ok
+test_empty_query_no_model_call (__main__.JamalLogicTests.test_empty_query_no_model_call) ... ok
+test_fallback_does_not_send_missing_transcript (__main__.JamalLogicTests.test_fallback_does_not_send_missing_transcript) ... ok
+test_help_in_arabic (__main__.JamalLogicTests.test_help_in_arabic) ... ok
+test_launch_has_arabic_greeting (__main__.JamalLogicTests.test_launch_has_arabic_greeting) ... ok
+test_missing_slots_no_model_call (__main__.JamalLogicTests.test_missing_slots_no_model_call) ... ok
+test_searchquery_has_carrier_phrases (__main__.JamalLogicTests.test_searchquery_has_carrier_phrases) ... ok
+test_session_end_does_not_speak (__main__.JamalLogicTests.test_session_end_does_not_speak) ... ok
+test_stop_cancel_home (__main__.JamalLogicTests.test_stop_cancel_home) ... ok
+test_timeout_is_not_spoken_verbatim (__main__.JamalLogicTests.test_timeout_is_not_spoken_verbatim) ... OpenAI request failed: Timeout
+ok
+test_xml_special_characters_are_escaped (__main__.JamalLogicTests.test_xml_special_characters_are_escaped) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.103s
+
+OK

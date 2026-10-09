@@ -1,0 +1,54 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "مرحبا جمال",
+      "intents": [
+        {
+          "name": "GptQueryIntent",
+          "slots": [
+            {
+              "name": "query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "جمال {query}",
+            "يا جمال {query}",
+            "سؤالي {query}",
+            "سؤالي هو {query}",
+            "أريد أسألك {query}"
+          ]
+        },
+        {
+          "name": "ClearContextIntent",
+          "samples": [
+            "امسح المحادثة",
+            "امسح السياق",
+            "نبدأ من جديد"
+          ]
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        }
+      ],
+      "types": []
+    }
+  }
+}

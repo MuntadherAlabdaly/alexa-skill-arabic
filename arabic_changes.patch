@@ -1,0 +1,204 @@
+--- a/lambda_function.py
++++ b/lambda_function.py
+@@ -10,2 +10,3 @@
+ import re
++from html import escape
+ 
+@@ -16,2 +17,5 @@
+ model = "gpt-4o-mini"
++
++# Keep the original follow-up function, but avoid a second model request by default.
++ENABLE_FOLLOWUP_SUGGESTIONS = False
+ 
+@@ -29,3 +33,3 @@
+         # type: (HandlerInput) -> Response
+-        speak_output = "Chat G.P.T. mode activated"
++        speak_output = "هلا بيك، وياك جمال. كلي مثلا: جمال احچيلي عن تاريخ بغداد."
+ 
+@@ -49,3 +53,16 @@
+         # type: (HandlerInput) -> Response
+-        query = handler_input.request_envelope.request.intent.slots["query"].value
++        request = handler_input.request_envelope.request
++        slots = request.intent.slots or {}
++        query_slot = slots.get("query")
++        query = (query_slot.value or "").strip() if query_slot else ""
++
++        # Log routing metadata only, not private conversations or credentials.
++        logger.info("locale=%s intent=%s query_present=%s",
++                    request.locale, request.intent.name, bool(query))
++        if not query:
++            speak_output = "ما وصلني سؤالك. كلي مثلا: جمال احچيلي عن تاريخ بغداد."
++            return (handler_input.response_builder
++                    .speak(speak_output)
++                    .ask("كلي جمال، وبعدها سؤالك.")
++                    .response)
+ 
+@@ -78,3 +95,3 @@
+         # Format the response with follow-up suggestions if available
+-        response = response_text
++        response = escape(response_text, quote=False)
+         if followup_questions and len(followup_questions) > 0:
+@@ -82,15 +99,15 @@
+             response += " <break time=\"0.5s\"/> "
+-            response += "You could ask: "
++            response += "تكدر تسأل: "
+             # Join with 'or' for the last question
+             if len(followup_questions) > 1:
+-                response += ", ".join([f"'{q}'" for q in followup_questions[:-1]])
+-                response += f", or '{followup_questions[-1]}'"
++                response += ", ".join([f"'{escape(q, quote=False)}'" for q in followup_questions[:-1]])
++                response += f"، أو '{escape(followup_questions[-1], quote=False)}'"
+             else:
+-                response += f"'{followup_questions[0]}'"
+-            response += ". <break time=\"0.5s\"/> What would you like to know?"
++                response += f"'{escape(followup_questions[0], quote=False)}'"
++            response += ". <break time=\"0.5s\"/>"
+         
+         # Prepare response with reprompt that includes the follow-up questions
+-        reprompt_text = "You can ask me another question or say stop to end the conversation."
++        reprompt_text = "كلي جمال، وبعدها سؤالك، أو كلي توقف."
+         if 'followup_questions' in session_attr and session_attr['followup_questions']:
+-            reprompt_text = "You can ask me another question, say 'next' to hear more suggestions, or say stop to end the conversation."
++            reprompt_text = "كلي جمال، وبعدها سؤالك، أو كلي توقف."
+         
+@@ -111,5 +128,5 @@
+         # type: (HandlerInput, Exception) -> Response
+-        logger.error(exception, exc_info=True)
+-
+-        speak_output = "Sorry, I had trouble doing what you asked. Please try again."
++        logger.error("Unhandled Alexa request: %s", type(exception).__name__)
++
++        speak_output = "صار خلل بسيط. كلي جمال، وبعدها عيد سؤالك."
+ 
+@@ -127,3 +144,4 @@
+         return (ask_utils.is_intent_name("AMAZON.CancelIntent")(handler_input) or
+-                ask_utils.is_intent_name("AMAZON.StopIntent")(handler_input))
++                ask_utils.is_intent_name("AMAZON.StopIntent")(handler_input) or
++                ask_utils.is_intent_name("AMAZON.NavigateHomeIntent")(handler_input))
+ 
+@@ -131,3 +149,3 @@
+         # type: (HandlerInput) -> Response
+-        speak_output = "Leaving Chat G.P.T. mode"
++        speak_output = "مع السلامة."
+ 
+@@ -170,3 +188,5 @@
+ def generate_followup_questions(conversation_context, query, response, count=2):
+-    """Generates concise follow-up questions based on the conversation context"""
++    """Generates concise follow-up questions based on the conversation context."""
++    if not ENABLE_FOLLOWUP_SUGGESTIONS:
++        return []
+     try:
+@@ -180,6 +200,6 @@
+         messages = [
+-            {"role": "system", "content": "You are a helpful assistant that suggests short follow-up questions."},
+-            {"role": "user", "content": """Based on the conversation, suggest 2 very short follow-up questions (max 4 words each). 
+-            Make them direct and simple. Return ONLY the questions separated by '|'.
+-            Example: What's the capital?|How big is it?"""}
++            {"role": "system", "content": "اقترح أسئلة متابعة قصيرة باللهجة العراقية فقط، بدون شرح."},
++            {"role": "user", "content": """اقترح سؤالين قصيرين باللهجة العراقية، كل سؤال أربع كلمات كحد أقصى.
++            رجع الأسئلة فقط وافصل بينها بعلامة |.
++            مثال: احچيلي أكثر|عندك مثال"""}
+         ]
+@@ -194,3 +214,3 @@
+         messages.append({"role": "assistant", "content": response})
+-        messages.append({"role": "user", "content": "Follow-up questions (separated by |):"})
++        messages.append({"role": "user", "content": "أسئلة المتابعة بالعراقي، مفصولة بعلامة |:"})
+         
+@@ -207,3 +227,3 @@
+             # Clean and split the response
+-            questions = [q.strip().rstrip('?') for q in questions_text.split('|') if q.strip()]
++            questions = [q.strip().rstrip('?؟') for q in questions_text.split('|') if q.strip()]
+             # Ensure we have valid questions
+@@ -213,13 +233,13 @@
+             if len(questions) < 2:
+-                questions = ["Tell me more", "Give me an example"]
++                questions = ["احچيلي أكثر", "عندك مثال"]
+                 
+-            logger.info(f"Generated follow-up questions: {questions}")
++            logger.info("Generated %s follow-up suggestions", len(questions))
+             return questions
+             
+-        logger.error(f"API Error: {response.text}")
+-        return ["Tell me more", "Give me an example"]
++        logger.error("Follow-up API status=%s", response.status_code)
++        return ["احچيلي أكثر", "عندك مثال"]
+         
+     except Exception as e:
+-        logger.error(f"Error in generate_followup_questions: {str(e)}")
+-        return ["Tell me more", "Give me an example"]
++        logger.error("Follow-up API failure: %s", type(e).__name__)
++        return ["احچيلي أكثر", "عندك مثال"]
+ 
+@@ -279,3 +299,5 @@
+     try:
+-        response = requests.post(url, headers=headers, data=json.dumps(data))
++        # A bounded wait prevents an indefinitely blocked HTTP call. This is
++        # not a guarantee of Alexa's overall response deadline.
++        response = requests.post(url, headers=headers, data=json.dumps(data), timeout=(1, 5))
+         response_data = response.json()
+@@ -292,5 +314,5 @@
+                 )
+-                logger.info(f"Generated follow-up questions: {followup_questions}")
++                logger.info("Follow-up suggestion count=%s", len(followup_questions))
+             except Exception as e:
+-                logger.error(f"Error generating follow-up questions: {str(e)}")
++                logger.error("Follow-up failure: %s", type(e).__name__)
+                 followup_questions = []
+@@ -299,6 +321,7 @@
+         else:
+-            return f"Error {response.status_code}: {response_data['error']['message']}", []
++            logger.error("OpenAI API status=%s", response.status_code)
++            return "صار خلل بالاتصال. جرب تسألني مرة ثانية بعد شوي.", []
+     except Exception as e:
+-        logger.error(f"Error generating response: {str(e)}")
+-        return f"Error generating response: {str(e)}", []
++        logger.error("OpenAI request failed: %s", type(e).__name__)
++        return "صار خلل بالاتصال. جرب تسألني مرة ثانية بعد شوي.", []
+ 
+@@ -316,3 +339,3 @@
+         
+-        speak_output = "I've cleared our conversation history. What would you like to talk about?"
++        speak_output = "مسحت سياق حچينا بهالجلسة. كلي جمال، وبعدها سؤالك الجديد."
+         
+@@ -324,2 +347,35 @@
+         )
++
++class HelpIntentHandler(AbstractRequestHandler):
++    """Explain the Arabic query format without calling the model."""
++    def can_handle(self, handler_input):
++        return ask_utils.is_intent_name("AMAZON.HelpIntent")(handler_input)
++
++    def handle(self, handler_input):
++        return (handler_input.response_builder
++                .speak("كلي جمال، وبعدها سؤالك. مثلا: جمال احچيلي عن تاريخ بغداد.")
++                .ask("شنو تحب تسأل جمال؟")
++                .response)
++
++
++class FallbackIntentHandler(AbstractRequestHandler):
++    """An unmatched intent is not a transcript; ask for a supported phrasing."""
++    def can_handle(self, handler_input):
++        return ask_utils.is_intent_name("AMAZON.FallbackIntent")(handler_input)
++
++    def handle(self, handler_input):
++        return (handler_input.response_builder
++                .speak("ما فهمت سؤالك زين. كلي جمال، وبعدها عيد سؤالك.")
++                .ask("كلي مثلا: جمال احچيلي قصة.")
++                .response)
++
++
++class SessionEndedRequestHandler(AbstractRequestHandler):
++    """A completed Alexa session must not produce more speech."""
++    def can_handle(self, handler_input):
++        return ask_utils.is_request_type("SessionEndedRequest")(handler_input)
++
++    def handle(self, handler_input):
++        return handler_input.response_builder.response
++
+ 
+@@ -331,2 +387,5 @@
+ sb.add_request_handler(CancelOrStopIntentHandler())
++sb.add_request_handler(HelpIntentHandler())
++sb.add_request_handler(FallbackIntentHandler())
++sb.add_request_handler(SessionEndedRequestHandler())
+ sb.add_exception_handler(CatchAllExceptionHandler())
